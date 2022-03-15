@@ -1,51 +1,43 @@
-// const { application } = require('express')
-const express=require('express')
+const express = require('express');
+let app = express();
+let PORT = 8000;
 
-const app=express()
+app.use(logger);
+// rotes
 
-app.use(logger)
+app.get('/books', (req, res) => {
+  res.send({ route: req.path });
+});
+
+app.get('/libraries', checkPermission('librarian'), (req, res) => {
+    return res.send({ route: req.path, permission: req.permission });
+});
+
+app.get('/authors', checkPermission('author'), (req, res) => {
+    return res.send({ route: req.path, permission: req.permission });
+});
 
 
+// middlewares
 
-app.get("/books",logger, (req,res)=>{
-  console.log("dsfdsf")
-
-    return res.send({route:"/books"})
-})
-app.use(checkPermission)
-app.get("/libraries",checkPermission,(req,res)=>{
-   
-
-    return res.send({ route: "/libraries", permission: true}
-
-    )
-   
-})
-app.get("/authors",checkPermission,(req,res)=>{
-
-    
-    return res.send( { route: "/authors", permission: true})
-   
-})
-
-function logger(req,res,next){
-   console.log
-   next();
-
+function logger(req, res, next) {
+  console.log(req.path);
+  next();
 }
-function checkPermission(req,res,next){
-  
-   if(req.path=="/authors"){
-     
-        next()
 
-    
-   }
-     else if(req.path=="//libraries"){
-        next()
-     }
-   
+function checkPermission(user) {
+  return (req, res, next) => {
+    if (user === 'librarian' && req.path === '/libraries') {
+      req.permission = true;
+    } else if (user === 'author' && req.path === '/authors') {
+      req.permission = true;
+    } else {
+      console.log('permission denied');
+    }
+    next();
+  };
 }
-app.listen(5000,()=>{
-    console.log("port 500")
-})
+
+app.listen(PORT, () => {
+  console.log(`server running on http://localhost:${PORT}`);
+});
